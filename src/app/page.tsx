@@ -229,11 +229,10 @@ export default function Home() {
                 key={tab.id}
                 id={`sidebar-${tab.id}-btn`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                  isActive
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${isActive
                     ? "bg-slate-900/10 dark:bg-white/10 text-slate-900 dark:text-white font-semibold"
                     : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-700 dark:hover:text-slate-200"
-                }`}
+                  }`}
               >
                 <div
                   className={`transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
@@ -530,7 +529,8 @@ export default function Home() {
           Bottom Tab Navigation (mobile + tablet only)
          ══════════════════════════════════════════════════════════ */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 dark:border-slate-900/80 bg-white/95 dark:bg-slate-950/90 backdrop-blur-xl transition-colors lg:hidden">
-        <div className="content-container grid grid-cols-4 h-30 px-1!">
+        {/* 💡 ปรับ h-25 และเพิ่ม items-center เพื่อให้คอนเทนต์จัดแนวตั้งตรงกลางพอดี */}
+        <div className="content-container grid grid-cols-4 h-25 px-1 items-center">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -538,23 +538,25 @@ export default function Home() {
                 key={tab.id}
                 id={`tab-${tab.id}-btn`}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center justify-center gap-1 relative transition-all duration-200 ${
-                  isActive
+                // 💡 เพิ่ม h-full เพื่อให้ปุ่มกินพื้นที่เต็มความสูง และปรับ gap-1.5 ให้มีระยะห่างที่พอดี
+                className={`flex h-full flex-col items-center justify-center gap-1.5 relative transition-all duration-200 py-2 cursor-pointer ${isActive
                     ? "text-slate-900 dark:text-white"
                     : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
+                  }`}
               >
                 {/* Active indicator pill */}
                 {isActive && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-yellow-400" />
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-10 rounded-full bg-yellow-400" />
                 )}
                 <div
-                  className={`transition-transform duration-200 ${isActive ? "scale-110" : ""}`}
+                  className={`transition-transform duration-200 [&>svg]:w-6 [&>svg]:h-6 ${isActive ? "scale-110 text-yellow-500 dark:text-yellow-400" : ""
+                    }`}
                 >
                   {tab.icon}
                 </div>
                 <span
-                  className={`text-[10px] font-medium transition-all ${isActive ? "font-semibold" : ""}`}
+                  className={`text-[11px] tracking-wide font-medium transition-all ${isActive ? "font-bold" : ""
+                    }`}
                 >
                   {tab.label}
                 </span>

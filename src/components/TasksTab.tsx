@@ -11,7 +11,9 @@ import {
   ListTodo, 
   Eye, 
   EyeOff, 
-  Target
+  Target,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react'
 import {
   showSuccess,
@@ -173,6 +175,22 @@ export default function TasksTab({ userId }: TasksTabProps) {
     setDragOverId(id)
   }
 
+  // ฟังก์ชันจัดบันทึกเรียงลำดับลง Database ตัวกลาง
+  const saveNewOrder = async (updatedList: TodoItem[]) => {
+    try {
+      await Promise.all(
+        updatedList.map(item =>
+          supabase
+            .from('todo_list')
+            .update({ sort_order: item.sort_order })
+            .eq('id', item.id)
+        )
+      )
+    } catch (err) {
+      console.warn('Could not persist sort order:', err)
+    }
+  }
+
   const handleDragEnd = async () => {
     if (!dragItem.current || !dragOverItem.current || dragItem.current === dragOverItem.current) {
       setDraggingId(null)
@@ -203,22 +221,31 @@ export default function TasksTab({ userId }: TasksTabProps) {
     dragItem.current = null
     dragOverItem.current = null
 
-    try {
-      await Promise.all(
-        updated.map(item =>
-          supabase
-            .from('todo_list')
-            .update({ sort_order: item.sort_order })
-            .eq('id', item.id)
-        )
-      )
-    } catch (err) {
-      console.warn('Could not persist sort order:', err)
-    }
+    await saveNewOrder(updated)
   }
 
-  // ── Touch Events For Mobile ──
-  const handleTouchStart = (e: React.TouchEvent, id: string, isCompleted: boolean) => {
+  // ── ฟังก์ชันกดปุ่มสลับตำแหน่งแบบ Click/Tap (ช่วยให้ใช้งานง่ายบนมือถือเพิ่มขึ้น) ──
+  const moveTaskStep = async (id: string, direction: 'up' | 'down') => {
+    const index = todos.findIndex(t => t.id === id)
+    if (index === -1) return
+    if (direction === 'up' && index === 0) return
+    if (direction === 'down' && index === todos.length - 1) return
+
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    const newList = [...todos]
+    
+    // สลับตำแหน่งใน Array
+    const temp = newList[index]
+    newList[index] = newList[targetIndex]
+    newList[targetIndex] = temp
+
+    const updated = newList.map((item, idx) => ({ ...item, sort_order: idx }))
+    setTodos(updated)
+    await saveNewOrder(updated)
+  }
+
+  // ── Touch Events แบบ Advanced สำหรับตรวจจับพิกัดจอสัมผัสมือถือ ──
+  const handleTouchStart = (id: string, isCompleted: boolean) => {
     if (isCompleted) return
     dragItem.current = id
     setDraggingId(id)
@@ -228,8 +255,12 @@ export default function TasksTab({ userId }: TasksTabProps) {
     if (!draggingId) return
 
     const touch = e.touches[0]
+    // ค้นหา Element ตรงๆ จากจุดที่นิ้วกำลังลากผ่านบนหน้าจอ
     const element = document.elementFromPoint(touch.clientX, touch.clientY)
-    const closestItem = element?.closest('[data-todo-id]')
+    if (!element) return
+
+    // หา HTML Node ที่ใกล้ที่สุดที่มี Attributes ระบุ Todo ID ไว้
+    const closestItem = element.closest('[data-todo-id]')
 
     if (closestItem) {
       const overId = closestItem.getAttribute('data-todo-id')
@@ -303,7 +334,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
       {/* ── Drag Hint ── */}
       {displayTodos.length > 1 && (
         <p className="text-[10px] font-medium tracking-wide uppercase text-slate-400 dark:text-slate-600 text-center flex items-center justify-center gap-1">
-          <GripVertical className="h-3 w-3 inline" /> กดค้างและลากเพื่อเรียงลำดับงานความสำคัญ
+          <GripVertical className="h-3 w-3 inline" /> ลากวางหรือกดปุ่มลูกศรเพื่อเรียงลำดับงาน
         </p>
       )}
 
@@ -326,7 +357,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/60">
-            {displayTodos.map(todo => (
+            {displayTodos.map((todo, idx) => (
               <div
                 key={todo.id}
                 data-todo-id={todo.id}
@@ -335,7 +366,7 @@ export default function TasksTab({ userId }: TasksTabProps) {
                 onDragEnter={() => handleDragEnter(todo.id)}
                 onDragEnd={handleDragEnd}
                 onDragOver={e => e.preventDefault()}
-                onTouchStart={(e) => handleTouchStart(e, todo.id, todo.is_completed)}
+                onTouchStart={() => handleTouchStart(todo.id, todo.is_completed)}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 className={`group flex items-center justify-between p-3.5 lg:p-4.5 transition-colors select-none ${
@@ -349,10 +380,33 @@ export default function TasksTab({ userId }: TasksTabProps) {
                 }`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {/* Drag Handle Icon - แสดงตลอดเวลาบนมือถือเพื่อให้กดลากง่ายขึ้น */}
+                  {/* ปุ่มลูกศร + จุดไข่ปลา สำหรับสั่งงานสลับตำแหน่งบน Mobile / Desktop */}
                   {!todo.is_completed && (
-                    <div className="text-slate-300 dark:text-slate-700 cursor-grab active:cursor-grabbing shrink-0 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
-                      <GripVertical className="h-4 w-4" />
+                    <div className="flex items-center gap-1 text-slate-400 dark:text-slate-600 shrink-0">
+                      {/* ไอคอนสำหรับใช้เมาส์ลากบน Desktop */}
+                      <div className="hidden lg:block cursor-grab active:cursor-grabbing p-0.5 hover:text-slate-600 dark:hover:text-slate-300">
+                        <GripVertical className="h-4 w-4" />
+                      </div>
+                      
+                      {/* ปุ่มขยับขึ้น (ซ่อนบนคอม แสดงบนจอสัมผัส) */}
+                      <button
+                        type="button"
+                        onClick={() => moveTaskStep(todo.id, 'up')}
+                        disabled={idx === 0}
+                        className="lg:hidden p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 text-slate-500"
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* ปุ่มขยับลง (ซ่อนบนคอม แสดงบนจอสัมผัส) */}
+                      <button
+                        type="button"
+                        onClick={() => moveTaskStep(todo.id, 'down')}
+                        disabled={idx === displayTodos.length - 1}
+                        className="lg:hidden p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-20 text-slate-500"
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   )}
 
