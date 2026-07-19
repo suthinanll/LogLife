@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Kanit } from "next/font/google";
 import "./globals.css";
 
@@ -25,9 +25,22 @@ const kanit = Kanit({
   variable: "--font-kanit",
   preload: false,
 });
+
+// 1. ตั้งค่า Metadata สำหรับ PWA
 export const metadata: Metadata = {
   title: "ใช้เอง",
   description: "แอปพลิเคชันจัดการชีวิตส่วนตัวของคุณแบบครบวงจร",
+  manifest: "/manifest.json", // ลิงก์ไปยังไฟล์ manifest
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ใช้เอง",
+  },
+};
+
+// 2. ตั้งค่า Viewport (แยกออกมาตามโครงสร้างใหม่ของ Next.js)
+export const viewport: Viewport = {
+  themeColor: "#000000", // เปลี่ยนเป็นสีธีมหลักของแอปคุณได้
 };
 
 export default function RootLayout({
