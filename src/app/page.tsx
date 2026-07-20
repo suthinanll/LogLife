@@ -529,7 +529,6 @@ export default function Home() {
           Bottom Tab Navigation (mobile + tablet only)
          ══════════════════════════════════════════════════════════ */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 dark:border-slate-900/80 bg-white/95 dark:bg-slate-950/90 backdrop-blur-xl transition-colors lg:hidden">
-        {/* 💡 ปรับ h-25 และเพิ่ม items-center เพื่อให้คอนเทนต์จัดแนวตั้งตรงกลางพอดี */}
         <div className="content-container grid grid-cols-4 h-18 px-1 items-center">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -538,7 +537,6 @@ export default function Home() {
                 key={tab.id}
                 id={`tab-${tab.id}-btn`}
                 onClick={() => setActiveTab(tab.id)}
-                // 💡 เพิ่ม h-full เพื่อให้ปุ่มกินพื้นที่เต็มความสูง และปรับ gap-1.5 ให้มีระยะห่างที่พอดี
                 className={`flex h-full flex-col items-center justify-center gap-1.5 relative transition-all duration-200 py-2 cursor-pointer ${isActive
                     ? "text-slate-900 dark:text-white"
                     : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
@@ -549,7 +547,7 @@ export default function Home() {
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-10 rounded-full bg-yellow-400" />
                 )}
                 <div
-                  className={`transition-transform duration-200 [&>svg]:w-6 [&>svg]:h-6 ${isActive ? "scale-110 text-yellow-500 dark:text-yellow-400" : ""
+                  className={`transition-transform duration-200 [&>svg]:w-5 [&>svg]:h-5 ${isActive ? "scale-110 text-yellow-500 dark:text-yellow-400" : ""
                     }`}
                 >
                   {tab.icon}
