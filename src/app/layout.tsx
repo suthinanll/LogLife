@@ -28,7 +28,7 @@ const kanit = Kanit({
 
 // 1. ตั้งค่า Metadata สำหรับ PWA
 export const metadata: Metadata = {
-  title: "ใช้เอง",
+  title: "LogLife",
   description: "แอปพลิเคชันจัดการชีวิตส่วนตัวของคุณแบบครบวงจร",
   manifest: "/manifest.json", // ลิงก์ไปยังไฟล์ manifest
   appleWebApp: {
